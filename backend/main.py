@@ -1,16 +1,42 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+import os
 
 app = FastAPI()
 
-# Serve static files
-app.mount("/static", StaticFiles(directory="."), name="static")
+# ✅ CORS (important for frontend ↔ backend)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # tighten later if needed
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Default route → index.html
+# ✅ Static folder (ONLY frontend assets)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# ✅ Root route → index.html
 @app.get("/")
 def read_index():
     return FileResponse("index.html")
+
+# ✅ Analysis page
+@app.get("/analysis")
+def analysis_page():
+    return FileResponse("Analysis.html")
+
+# ✅ Interview page
+@app.get("/interview")
+def interview_page():
+    return FileResponse("Interview.html")
+
+# ✅ Health check (very useful for Railway)
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 # New
 # from fastapi import FastAPI
