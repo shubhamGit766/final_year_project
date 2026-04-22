@@ -128,7 +128,8 @@
 </div>
 
 <script>
-  const API_BASE = 'http://localhost:8000';
+  // const API_BASE = 'http://localhost:8000';
+  const API_BASE = window.location.origin;
   const data = JSON.parse(sessionStorage.getItem('analysisData') || 'null');
   const level = sessionStorage.getItem('level') || 'Mid';
   if (!data) window.location.href = 'index.html';
