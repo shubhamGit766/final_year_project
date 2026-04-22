@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResumeIQ — AI Resume & Interview Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #08090c; --surface: #0f1117; --surface2: #161920;
+      --border: #1c2030; --accent: #7c6aff; --accent2: #00e5cc;
+      --accent-dim: rgba(124,106,255,0.12); --accent-glow: rgba(124,106,255,0.4);
+      --text: #e8eaf0; --text-muted: #636880;
+      --mono: 'DM Mono', monospace; --display: 'Syne', sans-serif; --body: 'DM Sans', sans-serif;
+      --green: #22c55e; --red: #ef4444;
+    }
+    html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--body); }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px; opacity: 0.4; pointer-events: none;
+    }
+    .page { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* NAV */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 48px; border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px); background: rgba(8,9,12,0.7);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .logo { font-family: var(--display); font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+    .logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-user { display: none; align-items: center; gap: 10px; }
+    .nav-user.show { display: flex; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-dim); border: 1px solid rgba(124,106,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 13px; font-family: var(--mono); color: var(--accent); font-weight: 600; }
+    .user-name { font-size: 13px; color: var(--text-muted); font-family: var(--mono); }
+    .btn-nav { font-family: var(--mono); font-size: 12px; padding: 7px 16px; border-radius: 20px; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border); background: transparent; color: var(--text-muted); }
+    .btn-nav:hover { color: var(--text); border-color: var(--accent); }
+    .btn-nav.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn-nav.primary:hover { box-shadow: 0 0 20px var(--accent-glow); }
+    .nav-auth { display: flex; gap: 8px; }
+    .nav-auth.hide { display: none; }
+
+    /* HERO */
+    .hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 24px 60px; text-align: center; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--accent-dim); border: 1px solid rgba(124,106,255,0.25); border-radius: 20px; padding: 6px 14px; font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 32px; animation: fadeDown 0.6s ease; }
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:translateY(0); } }
+    .hero-badge::before { content: '●'; font-size: 8px; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+    h1 { font-family: var(--display); font-size: clamp(42px,7vw,80px); font-weight: 800; line-height: 1.0; letter-spacing: -0.04em; animation: fadeUp 0.7s ease 0.1s both; }
+    h1 .line2 { color: var(--accent); display: block; }
+    .hero-sub { margin-top: 20px; font-size: 16px; color: var(--text-muted); line-height: 1.7; max-width: 480px; animation: fadeUp 0.7s ease 0.2s both; }
+    .steps { display: flex; gap: 0; margin: 48px 0 0; animation: fadeUp 0.7s ease 0.3s both; }
+    .step { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+    .step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--accent); }
+    .step-arrow { margin: 0 12px; color: var(--border); font-size: 16px; }
+
+    /* UPLOAD CARD */
+    .upload-section { width: 100%; max-width: 560px; margin: 40px auto 0; animation: fadeUp 0.7s ease 0.4s both; }
+    .upload-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; }
+    .card-label { font-family: var(--mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px; }
+    .drop-zone { border: 1.5px dashed var(--border); border-radius: 12px; padding: 40px 24px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
+    .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: var(--accent-dim); }
+    .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+    .drop-icon { font-size: 36px; margin-bottom: 12px; }
+    .drop-text { font-size: 14px; color: var(--text-muted); }
+    .drop-text strong { color: var(--accent); }
+    .drop-hint { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+    .file-selected { display: none; align-items: center; gap: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-top: 16px; }
+    .file-selected.show { display: flex; }
+    .file-icon { font-size: 24px; }
+    .file-name { font-size: 14px; font-weight: 500; flex: 1; }
+    .file-size { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+    .file-remove { cursor: pointer; color: var(--text-muted); font-size: 18px; padding: 4px; }
+    .file-remove:hover { color: #ff6b6b; }
+    .form-row { display: flex; gap: 12px; margin-top: 16px; }
+    .field { flex: 1; }
+    .field label { display: block; font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.08em; }
+    .field select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: var(--body); font-size: 14px; outline: none; transition: border-color 0.2s; appearance: none; }
+    .field select:focus { border-color: var(--accent); }
+    .btn-analyze { width: 100%; margin-top: 20px; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-family: var(--display); font-size: 15px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer; transition: all 0.2s; }
+    .btn-analyze:hover:not(:disabled) { box-shadow: 0 0 30px var(--accent-glow); transform: translateY(-1px); }
+    .btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-analyze.loading .btn-text { display: none; }
+    .btn-analyze .btn-loading { display: none; }
+    .btn-analyze.loading .btn-loading { display: inline; }
+
+    /* GUEST NOTICE */
+    .guest-notice { display: flex; align-items: center; gap: 10px; background: rgba(124,106,255,0.08); border: 1px solid rgba(124,106,255,0.2); border-radius: 8px; padding: 10px 14px; margin-top: 14px; font-size: 12px; color: var(--text-muted); }
+    .guest-notice a { color: var(--accent); cursor: pointer; text-decoration: none; }
+    .guest-notice a:hover { text-decoration: underline; }
+    .guest-notice.hide { display: none; }
+
+    /* FEATURES */
+    .features { display: flex; gap: 16px; padding: 0 48px 60px; justify-content: center; flex-wrap: wrap; }
+    .feature { flex: 1; min-width: 180px; max-width: 220px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .feature-icon { font-size: 24px; margin-bottom: 10px; }
+    .feature h3 { font-family: var(--display); font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .feature p { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── MODAL ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 100%; max-width: 420px; position: relative; animation: modalIn 0.3s ease; }
+    @keyframes modalIn { from { opacity:0; transform:scale(0.95) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .modal-close:hover { color: var(--text); background: var(--surface2); }
+    .modal-logo { font-family: var(--display); font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+    .modal-logo span { color: var(--accent); }
+    .modal-title { font-family: var(--display); font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+    .modal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
+    .modal-tabs { display: flex; background: var(--surface2); border-radius: 10px; padding: 4px; margin-bottom: 24px; }
+    .modal-tab { flex: 1; padding: 8px; text-align: center; font-family: var(--mono); font-size: 12px; color: var(--text-muted); cursor: pointer; border-radius: 7px; transition: all 0.2s; border: none; background: none; }
+    .modal-tab.active { background: var(--accent); color: #fff; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.08em; }
+    .form-group input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 11px 14px; color: var(--text); font-family: var(--body); font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .form-group input:focus { border-color: var(--accent); }
+    .form-group input::placeholder { color: var(--text-muted); }
+    .btn-submit { width: 100%; padding: 13px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-family: var(--display); font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
+    .btn-submit:hover:not(:disabled) { box-shadow: 0 0 24px var(--accent-glow); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .modal-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
+    .modal-error.show { display: block; }
+    .modal-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #86efac; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
+    .modal-success.show { display: block; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <nav>
+    <div class="logo">Resume<span>IQ</span></div>
+    <div class="nav-right">
+      <!-- Logged in state -->
+      <div class="nav-user" id="navUser">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span class="user-name" id="userName"></span>
+        <button class="btn-nav" onclick="logout()">Sign Out</button>
+      </div>
+      <!-- Guest state -->
+      <div class="nav-auth" id="navAuth">
+        <button class="btn-nav" onclick="openModal('login')">Sign In</button>
+        <button class="btn-nav primary" onclick="openModal('register')">Sign Up Free</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-badge">AI-POWERED CAREER ASSISTANT</div>
+    <h1>Analyse. Improve.<span class="line2">Get Hired.</span></h1>
+    <p class="hero-sub">Upload your resume, get an instant ATS score with improvement suggestions, then practice with an AI interviewer that knows your background.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div> Upload Resume</div>
+      <div class="step-arrow">→</div>
+      <div class="step"><div class="step-num">2</div> ATS Analysis</div>
+      <div class="step-arrow">→</div>
+      <div class="step"><div class="step-num">3</div> AI Interview</div>
+    </div>
+    <div class="upload-section">
+      <div class="upload-card">
+        <div class="card-label">// Upload your resume</div>
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept=".pdf" />
+          <div class="drop-icon">📄</div>
+          <div class="drop-text">Drop your PDF here or <strong>browse</strong></div>
+          <div class="drop-hint">PDF only · Max 10MB</div>
+        </div>
+        <div class="file-selected" id="fileSelected">
+          <div class="file-icon">📋</div>
+          <div class="file-name" id="fileName">resume.pdf</div>
+          <div class="file-size" id="fileSize">0 KB</div>
+          <div class="file-remove" id="fileRemove">✕</div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>TARGET ROLE</label>
+            <select id="roleSelect">
+              <option>Software Engineer</option>
+              <option>Frontend Developer</option>
+              <option>Backend Developer</option>
+              <option>Full Stack Developer</option>
+              <option>DevOps Engineer</option>
+              <option>Data Engineer</option>
+              <option>Machine Learning Engineer</option>
+              <option>Mobile Developer</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>EXPERIENCE LEVEL</label>
+            <select id="levelSelect">
+              <option>Junior</option>
+              <option selected>Mid</option>
+              <option>Senior</option>
+              <option>Lead</option>
+            </select>
+          </div>
+        </div>
+        <div class="guest-notice" id="guestNotice">
+          💾 <span><a onclick="openModal('register')">Sign up free</a> to save your analysis history and track progress over time.</span>
+        </div>
+        <button class="btn-analyze" id="btnAnalyze" disabled>
+          <span class="btn-text">Analyse My Resume →</span>
+          <span class="btn-loading">⏳ Analysing... please wait</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature"><div class="feature-icon">🎯</div><h3>ATS Score</h3><p>Know exactly how your resume ranks against automated screening systems.</p></div>
+    <div class="feature"><div class="feature-icon">🔑</div><h3>Missing Keywords</h3><p>Discover which keywords recruiters are looking for in your target role.</p></div>
+    <div class="feature"><div class="feature-icon">▶️</div><h3>YouTube Resources</h3><p>Curated learning links based on your specific weak areas.</p></div>
+    <div class="feature"><div class="feature-icon">🎙</div><h3>AI Interview</h3><p>Practice with an interviewer that has actually read your resume.</p></div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-logo">Resume<span>IQ</span></div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+      <button class="modal-tab" id="tabRegister" onclick="switchTab('register')">Sign Up</button>
+    </div>
+
+    <div id="modalError" class="modal-error"></div>
+    <div id="modalSuccess" class="modal-success"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <div class="modal-title">Welcome back</div>
+      <div class="modal-sub">Sign in to access your resume history</div>
+      <div class="form-group">
+        <label>EMAIL</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label>PASSWORD</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" />
+      </div>
+      <button class="btn-submit" id="btnLogin" onclick="handleLogin()">Sign In →</button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" style="display:none">
+      <div class="modal-title">Create account</div>
+      <div class="modal-sub">Free forever · No credit card needed</div>
+      <div class="form-group">
+        <label>FULL NAME</label>
+        <input type="text" id="regName" placeholder="Your Name" />
+      </div>
+      <div class="form-group">
+        <label>EMAIL</label>
+        <input type="email" id="regEmail" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label>PASSWORD</label>
+        <input type="password" id="regPassword" placeholder="Min 6 characters" />
+      </div>
+      <button class="btn-submit" id="btnRegister" onclick="handleRegister()">Create Account →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = 'http://localhost:8000';
+  let selectedFile = null;
+
+  // ── AUTH STATE ──
+  function getUser() { try { return JSON.parse(localStorage.getItem('riq_user')); } catch { return null; } }
+  function getToken() { return localStorage.getItem('riq_token'); }
+  function saveAuth(token, user) { localStorage.setItem('riq_token', token); localStorage.setItem('riq_user', JSON.stringify(user)); }
+  function clearAuth() { localStorage.removeItem('riq_token'); localStorage.removeItem('riq_user'); }
+
+  function updateNavUI() {
+    const user = getUser();
+    if (user) {
+      document.getElementById('navUser').classList.add('show');
+      document.getElementById('navAuth').classList.add('hide');
+      document.getElementById('userAvatar').textContent = user.name?.charAt(0).toUpperCase() || '?';
+      document.getElementById('userName').textContent = user.name;
+      document.getElementById('guestNotice').classList.add('hide');
+    } else {
+      document.getElementById('navUser').classList.remove('show');
+      document.getElementById('navAuth').classList.remove('hide');
+      document.getElementById('guestNotice').classList.remove('hide');
+    }
+  }
+
+  function logout() { clearAuth(); updateNavUI(); }
+
+  // ── MODAL ──
+  function openModal(tab = 'login') {
+    document.getElementById('modalOverlay').classList.add('show');
+    switchTab(tab);
+    clearModalMessages();
+  }
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+  function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+  function switchTab(tab) {
+    document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+    document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+    document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+    clearModalMessages();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('modalError');
+    el.textContent = msg; el.classList.add('show');
+    document.getElementById('modalSuccess').classList.remove('show');
+  }
+  function showSuccess(msg) {
+    const el = document.getElementById('modalSuccess');
+    el.textContent = msg; el.classList.add('show');
+    document.getElementById('modalError').classList.remove('show');
+  }
+  function clearModalMessages() {
+    document.getElementById('modalError').classList.remove('show');
+    document.getElementById('modalSuccess').classList.remove('show');
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { showError('Please fill in all fields.'); return; }
+    const btn = document.getElementById('btnLogin');
+    btn.disabled = true; btn.textContent = 'Signing in...';
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.error) { showError(data.error); return; }
+      saveAuth(data.token, data.user);
+      showSuccess('Welcome back, ' + data.user.name + '!');
+      setTimeout(() => { closeModal(); updateNavUI(); }, 1000);
+    } catch (e) { showError('Could not connect to server.'); }
+    finally { btn.disabled = false; btn.textContent = 'Sign In →'; }
+  }
+
+  async function handleRegister() {
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    if (!name || !email || !password) { showError('Please fill in all fields.'); return; }
+    if (password.length < 6) { showError('Password must be at least 6 characters.'); return; }
+    const btn = document.getElementById('btnRegister');
+    btn.disabled = true; btn.textContent = 'Creating account...';
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      if (data.error) { showError(data.error); return; }
+      saveAuth(data.token, data.user);
+      showSuccess('Account created! Welcome, ' + data.user.name + ' 🎉');
+      setTimeout(() => { closeModal(); updateNavUI(); }, 1200);
+    } catch (e) { showError('Could not connect to server.'); }
+    finally { btn.disabled = false; btn.textContent = 'Create Account →'; }
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (document.getElementById('loginForm').style.display !== 'none') handleLogin();
+      else handleRegister();
+    }
+  });
+
+  // ── FILE UPLOAD ──
+  const fileInput = document.getElementById('fileInput');
+  const dropZone = document.getElementById('dropZone');
+  const fileSelected = document.getElementById('fileSelected');
+  const fileName = document.getElementById('fileName');
+  const fileSize = document.getElementById('fileSize');
+  const fileRemove = document.getElementById('fileRemove');
+  const btnAnalyze = document.getElementById('btnAnalyze');
+
+  function formatSize(b) { return b < 1024*1024 ? (b/1024).toFixed(1)+' KB' : (b/1024/1024).toFixed(1)+' MB'; }
+
+  function setFile(file) {
+    if (!file || file.type !== 'application/pdf') { alert('Please upload a PDF file.'); return; }
+    if (file.size > 10*1024*1024) { alert('File too large. Max 10MB.'); return; }
+    selectedFile = file;
+    fileName.textContent = file.name;
+    fileSize.textContent = formatSize(file.size);
+    fileSelected.classList.add('show');
+    dropZone.style.display = 'none';
+    btnAnalyze.disabled = false;
+  }
+
+  fileInput.addEventListener('change', e => setFile(e.target.files[0]));
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); setFile(e.dataTransfer.files[0]); });
+  fileRemove.addEventListener('click', () => {
+    selectedFile = null; fileInput.value = '';
+    fileSelected.classList.remove('show');
+    dropZone.style.display = '';
+    btnAnalyze.disabled = true;
+  });
+
+  btnAnalyze.addEventListener('click', async () => {
+    if (!selectedFile) return;
+    btnAnalyze.classList.add('loading');
+    btnAnalyze.disabled = true;
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('job_role', document.getElementById('roleSelect').value);
+
+    // attach token if logged in
+    const token = getToken();
+    if (token) formData.append('authorization', 'Bearer ' + token);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/resume/analyze`, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.error) { alert(data.error); return; }
+      sessionStorage.setItem('analysisData', JSON.stringify(data));
+      sessionStorage.setItem('level', document.getElementById('levelSelect').value);
+      window.location.href = 'analysis.html';
+    } catch (err) {
+      alert('Error connecting to backend. Make sure the server is running on port 8000.');
+    } finally {
+      btnAnalyze.classList.remove('loading');
+      btnAnalyze.disabled = false;
+    }
+  });
+
+  // Init
+  updateNavUI();
+</script>
+</body>
+</html>

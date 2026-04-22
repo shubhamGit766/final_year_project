@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResumeIQ — Analysis Results</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #08090c; --surface: #0f1117; --surface2: #161920;
+      --border: #1c2030; --accent: #7c6aff; --accent2: #00e5cc;
+      --accent-dim: rgba(124,106,255,0.1); --green: #22c55e; --red: #ef4444; --yellow: #f59e0b;
+      --text: #e8eaf0; --text-muted: #636880;
+      --mono: 'DM Mono', monospace; --display: 'Syne', sans-serif; --body: 'DM Sans', sans-serif;
+    }
+    html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--body); }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px; opacity: 0.3; pointer-events: none;
+    }
+    .page { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 24px 80px; }
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 0; border-bottom: 1px solid var(--border); margin-bottom: 48px;
+    }
+    .logo { font-family: var(--display); font-size: 20px; font-weight: 800; }
+    .logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .btn-sm { font-family: var(--mono); font-size: 12px; color: var(--text-muted); text-decoration: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; transition: all 0.2s; cursor: pointer; background: none; }
+    .btn-sm:hover { color: var(--text); border-color: var(--accent); }
+    .btn-sm.accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .nav-user-info { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+
+    /* HISTORY BANNER */
+    .saved-banner { display: none; align-items: center; gap: 10px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); border-radius: 10px; padding: 12px 16px; margin-bottom: 24px; font-size: 13px; color: #86efac; }
+    .saved-banner.show { display: flex; }
+    .login-cta-banner { display: none; align-items: center; justify-content: space-between; background: var(--accent-dim); border: 1px solid rgba(124,106,255,0.25); border-radius: 10px; padding: 12px 16px; margin-bottom: 24px; font-size: 13px; color: var(--text-muted); gap: 12px; }
+    .login-cta-banner.show { display: flex; }
+    .login-cta-banner a { color: var(--accent); cursor: pointer; font-weight: 600; white-space: nowrap; }
+
+    /* SCORE HERO */
+    .score-hero { display: grid; grid-template-columns: auto 1fr; gap: 40px; align-items: center; margin-bottom: 48px; animation: fadeUp 0.6s ease; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    .score-ring { position: relative; width: 160px; height: 160px; flex-shrink: 0; }
+    .score-ring svg { transform: rotate(-90deg); }
+    .ring-bg { fill: none; stroke: var(--surface2); stroke-width: 10; }
+    .ring-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1); }
+    .score-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .score-num { font-family: var(--display); font-size: 42px; font-weight: 800; line-height: 1; }
+    .score-label { font-family: var(--mono); font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .score-info h2 { font-family: var(--display); font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .score-info .candidate { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-bottom: 16px; }
+    .score-grade { display: inline-block; padding: 4px 12px; border-radius: 6px; font-family: var(--mono); font-size: 12px; font-weight: 500; }
+
+    /* SECTIONS */
+    .section { margin-bottom: 32px; animation: fadeUp 0.6s ease both; }
+    .section-title { font-family: var(--mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .breakdown-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .breakdown-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .breakdown-label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+    .breakdown-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+    .breakdown-fill { height: 100%; border-radius: 3px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+    .breakdown-score { font-family: var(--mono); font-size: 13px; font-weight: 500; margin-top: 6px; }
+    .keyword-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .keyword { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; padding: 6px 12px; border-radius: 6px; font-family: var(--mono); font-size: 12px; }
+    .list-items { display: flex; flex-direction: column; gap: 10px; }
+    .list-item { display: flex; align-items: flex-start; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 14px; line-height: 1.5; }
+    .list-icon { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+    .yt-links { display: flex; flex-direction: column; gap: 10px; }
+    .yt-link { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; text-decoration: none; color: var(--text); transition: all 0.2s; }
+    .yt-link:hover { border-color: #ff4444; background: rgba(255,68,68,0.05); }
+    .yt-icon { font-size: 24px; flex-shrink: 0; }
+    .yt-text { flex: 1; font-size: 14px; line-height: 1.4; }
+    .yt-arrow { color: var(--text-muted); font-size: 18px; }
+
+    /* CTA */
+    .cta-box { background: linear-gradient(135deg, rgba(124,106,255,0.15), rgba(0,229,204,0.08)); border: 1px solid rgba(124,106,255,0.3); border-radius: 16px; padding: 36px; text-align: center; margin-top: 48px; }
+    .cta-box h3 { font-family: var(--display); font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .cta-box p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+    .btn-interview { display: inline-block; padding: 14px 36px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-family: var(--display); font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+    .btn-interview:hover { box-shadow: 0 0 30px rgba(124,106,255,0.5); transform: translateY(-2px); }
+
+    /* HISTORY MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 600px; max-height: 80vh; overflow-y: auto; position: relative; animation: modalIn 0.3s ease; }
+    @keyframes modalIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+    .modal h3 { font-family: var(--display); font-size: 20px; font-weight: 800; margin-bottom: 20px; }
+    .history-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .history-role { font-size: 14px; font-weight: 600; }
+    .history-date { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .history-score { font-family: var(--display); font-size: 24px; font-weight: 800; }
+    .no-history { text-align: center; color: var(--text-muted); font-size: 14px; padding: 32px 0; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <nav>
+    <div class="logo">Resume<span>IQ</span></div>
+    <div class="nav-right">
+      <span class="nav-user-info" id="navUserInfo"></span>
+      <button class="btn-sm" id="btnHistory" onclick="openHistory()" style="display:none">📊 History</button>
+      <a href="index.html" class="btn-sm">← New Analysis</a>
+    </div>
+  </nav>
+
+  <!-- Banners -->
+  <div class="saved-banner" id="savedBanner">✅ Analysis saved to your account!</div>
+  <div class="login-cta-banner" id="loginCtaBanner">
+    <span>💾 Create a free account to save this analysis and track your progress over time.</span>
+    <a onclick="window.location.href='index.html'">Sign Up Free →</a>
+  </div>
+
+  <div id="content"></div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="modal-overlay" id="historyModal" onclick="if(event.target===this)closeHistory()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeHistory()">✕</button>
+    <h3>📊 Your Resume History</h3>
+    <div id="historyContent"><div class="no-history">Loading...</div></div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = 'http://localhost:8000';
+  const data = JSON.parse(sessionStorage.getItem('analysisData') || 'null');
+  const level = sessionStorage.getItem('level') || 'Mid';
+  if (!data) window.location.href = 'index.html';
+
+  function getUser() { try { return JSON.parse(localStorage.getItem('riq_user')); } catch { return null; } }
+  function getToken() { return localStorage.getItem('riq_token'); }
+
+  // Show user info and banners
+  const user = getUser();
+  if (user) {
+    document.getElementById('navUserInfo').textContent = user.name;
+    document.getElementById('btnHistory').style.display = 'inline-block';
+    if (data.user_id || getToken()) document.getElementById('savedBanner').classList.add('show');
+  } else {
+    document.getElementById('loginCtaBanner').classList.add('show');
+  }
+
+  function getScoreColor(s) { return s >= 75 ? '#22c55e' : s >= 50 ? '#f59e0b' : '#ef4444'; }
+  function getGrade(s) {
+    if (s >= 80) return { label: 'Excellent', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' };
+    if (s >= 65) return { label: 'Good', bg: 'rgba(245,158,11,0.15)', color: '#f59e0b' };
+    if (s >= 50) return { label: 'Average', bg: 'rgba(245,158,11,0.1)', color: '#f59e0b' };
+    return { label: 'Needs Work', bg: 'rgba(239,68,68,0.15)', color: '#ef4444' };
+  }
+  function getBarColor(v, m) { const p=v/m; return p>=0.75?'#22c55e':p>=0.5?'#f59e0b':'#ef4444'; }
+
+  const score = data.ats_score || 0;
+  const grade = getGrade(score);
+  const scoreColor = getScoreColor(score);
+  const circumference = 2 * Math.PI * 54;
+  const offset = circumference - (score/100)*circumference;
+  const breakdown = data.score_breakdown || {};
+  const keywords = data.missing_keywords || [];
+  const strengths = data.strengths || [];
+  const improvements = data.improvements || [];
+  const ytLinks = data.youtube_links || [];
+
+  document.getElementById('content').innerHTML = `
+    <div class="score-hero">
+      <div class="score-ring">
+        <svg width="160" height="160" viewBox="0 0 120 120">
+          <circle class="ring-bg" cx="60" cy="60" r="54"/>
+          <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="54"
+            stroke="${scoreColor}" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"/>
+        </svg>
+        <div class="score-text">
+          <div class="score-num" style="color:${scoreColor}" id="scoreNum">0</div>
+          <div class="score-label">ATS SCORE</div>
+        </div>
+      </div>
+      <div class="score-info">
+        <div class="candidate">// ${data.candidate_name||'Candidate'} · ${data.detected_role||data.job_role}</div>
+        <h2>Resume Analysis Complete</h2>
+        <span class="score-grade" style="background:${grade.bg};color:${grade.color}">${grade.label}</span>
+      </div>
+    </div>
+    <div class="section" style="animation-delay:0.1s">
+      <div class="section-title">Score Breakdown</div>
+      <div class="breakdown-grid">
+        ${Object.entries(breakdown).map(([k,v])=>`
+          <div class="breakdown-item">
+            <div class="breakdown-label">${k.charAt(0).toUpperCase()+k.slice(1)}</div>
+            <div class="breakdown-bar"><div class="breakdown-fill" style="width:0%;background:${getBarColor(v,25)}" data-width="${(v/25)*100}%"></div></div>
+            <div class="breakdown-score" style="color:${getBarColor(v,25)}">${v}/25</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="section" style="animation-delay:0.2s">
+      <div class="section-title">Missing Keywords</div>
+      <div class="keyword-grid">${keywords.map(k=>`<div class="keyword">${k}</div>`).join('')}</div>
+    </div>
+    <div class="section" style="animation-delay:0.25s">
+      <div class="section-title">Strengths</div>
+      <div class="list-items">${strengths.map(s=>`<div class="list-item"><span class="list-icon">✅</span>${s}</div>`).join('')}</div>
+    </div>
+    <div class="section" style="animation-delay:0.3s">
+      <div class="section-title">Suggested Improvements</div>
+      <div class="list-items">${improvements.map(i=>`<div class="list-item"><span class="list-icon">💡</span>${i}</div>`).join('')}</div>
+    </div>
+    <div class="section" style="animation-delay:0.35s">
+      <div class="section-title">YouTube Resources</div>
+      <div class="yt-links">${ytLinks.map(l=>`
+        <a href="${l.url}" target="_blank" class="yt-link">
+          <div class="yt-icon">▶️</div><div class="yt-text">${l.label}</div><div class="yt-arrow">↗</div>
+        </a>`).join('')}
+      </div>
+    </div>
+    <div class="cta-box">
+      <h3>Ready for the Interview?</h3>
+      <p>Our AI interviewer has read your resume and will ask questions tailored to your experience.</p>
+      <button class="btn-interview" onclick="startInterview()">Start AI Interview →</button>
+    </div>
+  `;
+
+  setTimeout(() => {
+    document.getElementById('ringFill').style.strokeDashoffset = offset;
+    let cur = 0;
+    const iv = setInterval(() => { cur++; document.getElementById('scoreNum').textContent = cur; if (cur >= score) clearInterval(iv); }, 1200/score);
+    document.querySelectorAll('.breakdown-fill').forEach(b => b.style.width = b.dataset.width);
+  }, 300);
+
+  function startInterview() {
+    sessionStorage.setItem('interviewRole', data.job_role || 'Software Engineer');
+    sessionStorage.setItem('interviewLevel', level);
+    sessionStorage.setItem('resumeText', data.resume_text || '');
+    window.location.href = 'Interview.html';
+  }
+
+  // HISTORY
+  async function openHistory() {
+    document.getElementById('historyModal').classList.add('show');
+    const token = getToken();
+    try {
+      const res = await fetch(`${API_BASE}/api/resume/history`, { headers: { 'Authorization': 'Bearer ' + token } });
+      const history = await res.json();
+      if (!history.length) {
+        document.getElementById('historyContent').innerHTML = '<div class="no-history">No past analyses found.</div>';
+        return;
+      }
+      document.getElementById('historyContent').innerHTML = history.map(h => {
+        const color = h.ats_score >= 75 ? '#22c55e' : h.ats_score >= 50 ? '#f59e0b' : '#ef4444';
+        const date = new Date(h.analyzed_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+        return `<div class="history-item">
+          <div><div class="history-role">${h.job_role} — ${h.candidate_name}</div><div class="history-date">${date}</div></div>
+          <div class="history-score" style="color:${color}">${h.ats_score}</div>
+        </div>`;
+      }).join('');
+    } catch (e) {
+      document.getElementById('historyContent').innerHTML = '<div class="no-history">Could not load history.</div>';
+    }
+  }
+  function closeHistory() { document.getElementById('historyModal').classList.remove('show'); }
+</script>
+</body>
+</html>
