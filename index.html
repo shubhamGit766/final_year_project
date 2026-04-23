@@ -431,7 +431,7 @@
       sessionStorage.setItem('level', document.getElementById('levelSelect').value);
       window.location.href = 'analysis.html';
     } catch (err) {
-      alert('Error connecting to backend. Make sure the server is running on port 8000.');
+      alert('Error: ' + err.message);
     } finally {
       btnAnalyze.classList.remove('loading');
       btnAnalyze.disabled = false;
