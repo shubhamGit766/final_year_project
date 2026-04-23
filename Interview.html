@@ -120,8 +120,7 @@
 </div>
 
 <script>
-  // const API_BASE = 'http://localhost:8000/api/interview';
-  const API_BASE = window.location.origin;
+  const API_BASE = window.location.origin + '/api/interview';
   const role       = sessionStorage.getItem('interviewRole') || 'Software Engineer';
   const level      = sessionStorage.getItem('interviewLevel') || 'Mid';
   const resumeText = sessionStorage.getItem('resumeText') || '';
