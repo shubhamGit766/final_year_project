@@ -1,14 +1,17 @@
 import os
+import sys
 from pathlib import Path
+
+# Fix imports: add backend/ folder to Python path so all modules are found
+sys.path.insert(0, str(Path(__file__).parent))
+
 from dotenv import load_dotenv
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
-# Load .env from backend folder
-load_dotenv(dotenv_path=Path(__file__).parent / ".env")
-
-# Import routers
 from interview_route import router as interview_router
 from resume_route import router as resume_router
 from auth_route import router as auth_router
@@ -23,17 +26,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# API routes
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(interview_router, prefix="/api/interview", tags=["Interview"])
 app.include_router(resume_router, prefix="/api/resume", tags=["Resume"])
 
-# Health check for Railway
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
-# Serve HTML files from root dir (parent of backend/)
+# Serve HTML files from root (parent of backend/)
 ROOT_DIR = Path(__file__).parent.parent
 
 @app.get("/")
@@ -46,7 +47,7 @@ def serve_analysis():
     for name in ["analysis.html", "Analysis.html"]:
         p = ROOT_DIR / name
         if p.exists(): return FileResponse(str(p))
-    return JSONResponse({"error": "analysis.html not found"}, status_code=404)
+    return JSONResponse({"error": "not found"}, status_code=404)
 
 @app.get("/Analysis.html")
 def serve_analysis_cap():
@@ -58,7 +59,8 @@ def serve_analysis_cap():
 @app.get("/Interview.html")
 def serve_interview():
     p = ROOT_DIR / "Interview.html"
-    return FileResponse(str(p)) if p.exists() else JSONResponse({"error": "Interview.html not found"}, status_code=404)
+    return FileResponse(str(p)) if p.exists() else JSONResponse({"error": "not found"}, status_code=404)
+
 
 # New
 # from fastapi import FastAPI
