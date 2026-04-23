@@ -2,7 +2,7 @@ import os
 import sys
 from pathlib import Path
 
-# Fix imports: add backend/ folder to Python path so all modules are found
+# Fix imports: add backend/ folder to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from dotenv import load_dotenv
@@ -34,13 +34,22 @@ app.include_router(resume_router, prefix="/api/resume", tags=["Resume"])
 def health():
     return {"status": "ok"}
 
-# Serve HTML files from root (parent of backend/)
 ROOT_DIR = Path(__file__).parent.parent
+
+def serve_html(filename: str):
+    p = ROOT_DIR / filename
+    if p.exists():
+        return FileResponse(str(p))
+    return JSONResponse({"error": f"{filename} not found"}, status_code=404)
 
 @app.get("/")
 def serve_index():
-    p = ROOT_DIR / "index.html"
-    return FileResponse(str(p)) if p.exists() else JSONResponse({"error": "index.html not found"}, status_code=404)
+    return serve_html("index.html")
+
+# Handle direct navigation to index.html
+@app.get("/index.html")
+def serve_index_html():
+    return serve_html("index.html")
 
 @app.get("/analysis.html")
 def serve_analysis():
@@ -58,8 +67,7 @@ def serve_analysis_cap():
 
 @app.get("/Interview.html")
 def serve_interview():
-    p = ROOT_DIR / "Interview.html"
-    return FileResponse(str(p)) if p.exists() else JSONResponse({"error": "not found"}, status_code=404)
+    return serve_html("Interview.html")
 
 
 # New

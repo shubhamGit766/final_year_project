@@ -11,8 +11,9 @@ JWT_SECRET = os.getenv("JWT_SECRET", "changeme_secret")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_HOURS = 24 * 7  # 7 days
 
-# pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+# Explicitly use bcrypt — avoids argon2 backend error on Railway
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
